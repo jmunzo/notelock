@@ -40,23 +40,7 @@ function Notelock-NewMessage {
     } else {
         # Allow Self-Signed SSL certs, if we aren't executing directly from PowerShell7
         if (($PSVersionTable.PSVersion.Major -lt 7) -and $SelfSigned) {
-
-# Create a C# class to handle the callback
-#############################################################################################################################
-$code = @"
-public class SSLHandler
-{
-    public static System.Net.Security.RemoteCertificateValidationCallback GetSSLHandler()
-    {
-
-        return new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate, chain, policyErrors) => { return true; });
-    }
-    
-}
-"@
-#############################################################################################################################
-            # Compile the class
-            Add-Type -TypeDefinition $code
+            Notelock-SSLHandler
         }
 
         # Test connection to the Server
@@ -213,7 +197,7 @@ function Notelock-PowerShell5-EncryptMessage {
     $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText
 
     # Unescape the message contents
-    $unescapedMsg = [Regex]::Unescape($Message) # Unescape the message content
+    $unescapedMsg = [Regex]::Unescape($Message) # Escape the message content
     $unescapedMsg = $unescapedMsg.Replace("''","'") # Unescape single quotes as well
 
     # Encrypt the message
@@ -226,6 +210,33 @@ function Notelock-PowerShell5-EncryptMessage {
     Write-Host $encData.CipherText
     Write-Host $encData.Tag
 }
+
+#################################
+# Notelock - SSL Handler
+#################################
+
+function Notelock-SSLHandler {
+
+# Create a C# class to handle the callback
+#############################################################################################################################
+$code = @"
+public class SSLHandler
+{
+    public static System.Net.Security.RemoteCertificateValidationCallback GetSSLHandler()
+    {
+
+        return new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate, chain, policyErrors) => { return true; });
+    }
+    
+}
+"@
+#############################################################################################################################
+
+    # Compile the class
+    Add-Type -TypeDefinition $code
+
+}
+
 
 # Export
 Export-ModuleMember -Function Notelock-NewMessage
