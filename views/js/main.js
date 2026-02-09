@@ -228,17 +228,29 @@
       throw new Error(`Response status: ${noteUrl.status}`);
     }
     // Parse the response body as JSON
-    let data = await noteUrl.json(); 
-    data = data.id;
-    // Concatenate UUID response with Secret key to form complete URL
-    let concatUrl = data.concat(base64UrlSafe);
-    // Output to HTML fields
-    const messageLink = document.querySelector(".aes-gcm #noteURL-value");
-    messageLink.classList.add('fade-in');
-    messageLink.addEventListener('animationend', () => {
-    messageLink.classList.remove('fade-in');
-    }, { once: true });
-    messageLink.textContent = concatUrl;
+    let data = await noteUrl.json();
+    // Check if error
+    if (data.id === 'ERROR') {
+      // Output to HTML fields
+      const messageLink = document.querySelector(".aes-gcm #noteURL-value");
+      messageLink.classList.add('fade-in');
+      messageLink.addEventListener('animationend', () => {
+      messageLink.classList.remove('fade-in');
+      }, { once: true });
+      messageLink.value = `error: too many encryption requests.  please wait ${data.time} minutes.`
+      messageLink.style.backgroundColor = "#A44";
+    } else {
+      data = data.id;
+      // Concatenate UUID response with Secret key to form complete URL
+      let concatUrl = data.concat(base64UrlSafe);
+      // Output to HTML fields
+      const messageLink = document.querySelector(".aes-gcm #noteURL-value");
+      messageLink.classList.add('fade-in');
+      messageLink.addEventListener('animationend', () => {
+      messageLink.classList.remove('fade-in');
+      }, { once: true });
+      messageLink.textContent = concatUrl;
+    }
   };
 
   /*

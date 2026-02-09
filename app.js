@@ -14,6 +14,14 @@ const httpsPort = 443; // HTTPS port, default 443
 const exInterval = 5; // Interval to check for expired notes (in minutes), 0 will never expire
 const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 
+// Rate Limit - Global
+const reqTimeWindow = 15; // Time window for max requests (in minutes)
+const reqMaxRequests = 100; // Max requests allowed from an IP within time window
+
+// Rate Limit - Encryption Only
+const encTimeWindow = 1; // Time window for max encryption requests (in minutes)
+const encMaxRequests = 5; // Max encryption requests allowed from an IP within time window
+
 // API encryption only (disables encryption page)
 const apiOnly = false
 
@@ -24,9 +32,9 @@ const apiOnly = false
 // Regularly print the database rows to the console (in minutes)
 const prInterval = 0; // Set to 0 to never print rows
 
+//#endregion
 
 //-----------------------
-
 
 /////////////////////////////////
 //#region APP REQUIRE
@@ -36,6 +44,7 @@ const express = require('express');
 const enforce = require('express-sslify');
 const { nanoid } = require('nanoid');
 const ejs = require('ejs');
+const rateLimit = require('express-rate-limit');
 const Database = require('better-sqlite3');
 
 // Get timestamp in ISO8601 format
@@ -55,6 +64,40 @@ if (apiOnly) {
     console.log("[NOTELOCK]", timeStamp, ":", "Notelock is starting...");
 }
 
+//#endregion
+
+//-----------------------
+
+/////////////////////////////////
+//#region EXPRESS-RATE-LIMITER
+/////////////////////////////////
+
+// Rate limit for encryption
+const encLimiter = rateLimit({
+    windowMs: encTimeWindow * 60 * 1000, // Time (in minutes)
+    max: encMaxRequests, // Amount of requests
+    handler: (req, res, next, options) => {
+        res.json({ id: 'ERROR', time: `${encTimeWindow}` });
+      },
+      message: `Too many encryption requests! Please try again after ${encTimeWindow} minute(s).`
+});
+console.log("[CONFIG] IPs are allowed to encrypt", encMaxRequests, "messages every", encTimeWindow, "minute(s)");
+
+// General rate limit
+const reqLimiter = rateLimit({
+    windowMs: reqTimeWindow * 60 * 1000, // Time (in minutes)
+    max: reqMaxRequests, // Amount of requests
+    handler: (req, res, next, options) => {
+        res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly, message: `too many requests.  try again in ${reqTimeWindow} minute(s)` });
+      },
+      message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
+});
+console.log("[CONFIG] IPs are allowed to make", reqMaxRequests, "requests every", reqTimeWindow, "minute(s)")
+
+//#endregion
+
+//-----------------------
+
 /////////////////////////////////
 //#region EXPRESS-SSLIFY
 /////////////////////////////////
@@ -68,6 +111,10 @@ const privateKey  = fs.readFileSync(`${pKey}`, 'utf8');
 const certificate = fs.readFileSync(`${pCert}`, 'utf8');
 
 const credentials = {key: privateKey, cert: certificate};
+
+//#endregion
+
+//-----------------------
 
 /////////////////////////////////
 //#region EXPRESS
@@ -85,6 +132,8 @@ app.use(express.urlencoded({ extended: true })); // Needed to parse request body
 
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
+
+app.use(reqLimiter);
 
 //#endregion
 
@@ -193,7 +242,7 @@ if (printInterval > 0) {
     console.log("[CONFIG] DB contents will print every", prInterval, "minute(s)");
     setInterval(dbDumpTable, printInterval);
 } else {
-    console.log("[CONFIG] DB contents will not print");
+    console.log("[CONFIG] DB contents will not print to console");
 }
 
 //#endregion
@@ -205,7 +254,7 @@ if (printInterval > 0) {
 /////////////////////////////////
 
 // POST data to the DB
-app.post('/encrypt', async (req, res) => {
+app.post('/encrypt', encLimiter, async (req, res) => {
     let client = req.ip.split(":").pop(); // Get the client IP
     let note = req.body; // Get the encrypted message
     // Make sure the UUID is unique
@@ -294,3 +343,5 @@ startServers().then(() => {
 
     console.log("[NOTELOCK]", timeStamp, ":", "Notelock started successfully");
 });
+
+//#endregion
