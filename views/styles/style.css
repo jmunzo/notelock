@@ -1,0 +1,179 @@
+/* General setup */
+
+* {
+    box-sizing: border-box;
+    vertical-align: top;
+}
+  
+html,
+body {
+  font-family: sans-serif;
+  line-height: 1.2rem;
+  background-color: #333;
+  color: #fff;
+}
+
+label {
+  font-size: 1.2em;
+}
+
+textarea {
+  resize: none;
+  border-radius: 0.5rem;
+}
+
+a {
+  color: #fff;
+}
+
+a:hover {
+  color: #999;
+}
+  
+h1 {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  text-align: center;
+  color: #fff;
+}
+
+h1 a {
+  text-decoration: none;
+}
+
+h1 a:hover {
+  color: #fff;
+}
+
+h2 {
+  text-align: center;
+}
+
+
+/*
+PAGE GRID
+*/
+
+main {
+  display: grid;
+  grid-template-columns: 10fr 1fr 10fr;
+  grid-template-rows: 1fr;
+}
+
+.control-body {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 500px;
+  max-width: 500px;
+}
+
+.new-message {
+  grid-column-start: 2;
+  grid-row-start: 2;
+  text-align: center;
+}
+
+
+/*
+FORM GRID
+*/
+
+.encrypt-controls,
+.decrypt-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+  
+.message-control {
+  grid-column-start: 2;
+  grid-row-start: 1;
+}
+
+.noteURL {
+  grid-column-start: 2;
+  grid-row-start: 2;
+}
+  
+.encrypt-button {
+  grid-column-start: 2;
+  grid-row-start: 3;
+}
+
+
+/* 
+FORM STYLES & LAYOUT
+*/
+
+.description {
+  margin-bottom: 1em;
+}
+  
+.description > p {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8em;
+}
+  
+.control {
+  background-color: #555;
+  box-shadow: -1px 2px 5px #000;
+  border-radius: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  margin: 0 0.5rem;
+  margin-bottom: 1rem;
+}
+  
+.encrypt-controls > *,
+.decrypt-controls > *
+{
+  margin: 0.5rem 0;
+}
+  
+input[type="button"] {
+  width: 5rem;
+  margin-bottom: 1.2em;
+}
+  
+#aes-gcm-message,
+#noteURL-value,
+#decrypted-value {
+  padding-left: 0.5rem;
+  font-family: monospace;
+  margin: 0.5em 0;
+}
+
+#noteURL-value,
+#decrypted-value {
+  background-color: #999;
+}
+
+#decrypted-value {
+  margin-bottom: 1.2em;
+}
+
+.copied-text {
+  float: right;
+  opacity: 0;
+}
+
+  
+/*
+ANIMATIONS
+*/
+
+.fade-in {
+  animation: fadein 0.5s;
+}
+
+.opaque {
+  opacity: 1;
+}
+  
+@keyframes fadein {
+  from {
+    opacity: 0;
+  } to {
+    opacity: 1;
+  }
+}

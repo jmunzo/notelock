@@ -1,0 +1,17 @@
+<%- include('partials/header'); -%>
+
+<% if (cipher !== '' && status !== '') { %>
+<h2 class="control-heading">read a message</h2>
+<div class="description">
+  <p>this message will no longer be readable once you leave this page.</p>
+  <p>be sure to copy it somewhere safe, if necessary.</p>
+</div>
+<section class="decrypt-controls">
+  <div class="message-control">
+    <label>message (click to copy):</label><span class="copied-text">copied text</span>
+    <textarea readonly id="decrypted-value" cols="50" rows="5"></textarea>
+  </div>
+</section>
+<% } %>
+
+<%- include('partials/footer'); -%>

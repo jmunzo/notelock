@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <% if (status) { %>
+    <meta property="status" content="<%= status %>" />
+    <meta property="cipher" content="<%= cipher %>" />
+  <% } %>
+  <title>notelock</title>
+  <link rel="stylesheet" type="text/css" href="/styles/style.css" />
+</head>
+
+<body>
+  <h1><a href="../">notelock</a></h1>
+  <div class="description">
+    <p>a minimalist zero-knowledge plaintext encryption platform</p>
+    <p>by <a href="http://github.com/jmunzo">github.com/jmunzo</a></p>
+  </div>
+  <main>
+    <section class="control-body">
+      <section class="control aes-gcm">

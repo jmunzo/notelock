@@ -1,0 +1,27 @@
+{
+  "name": "notelock",
+  "version": "1.0.0",
+  "description": "a minimalist zero-knowledge plaintext encryption platform",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "node",
+    "javascript",
+    "express",
+    "private",
+    "message"
+  ],
+  "homepage": "https://github.com/jmunzo/notelock",
+  "author": "jmunzo",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "express-sslify": "^1.2.0",
+    "nanoid": "^5.1.6"
+  }
+}
