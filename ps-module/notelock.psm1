@@ -213,7 +213,7 @@ function Notelock-PowerShell5-EncryptMessage {
     $PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText
 
     # Unescape the message contents
-    $unescapedMsg = [Regex]::Unescape($Message) # Escape the message content
+    $unescapedMsg = [Regex]::Unescape($Message) # Unescape the message content
     $unescapedMsg = $unescapedMsg.Replace("''","'") # Unescape single quotes as well
 
     # Encrypt the message
