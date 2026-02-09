@@ -15,16 +15,16 @@
 
 # BASIC USAGE:
 # Locally encrypt and post a message to a Notelock instance -
-# Notelock-NewMessage -Server "my.domain.com" -Message "Hello World!"
+# New-NotelockMessage -Server "my.domain.com" -Message "Hello World!"
 #
 # Locally encrypt and post a message to a Notelock instance using a Self-Signed certificate (for testing) -
-# Notelock-NewMessage -Server "my.domain.com" -Message "Hello World!" -SelfSigned $true
+# New-NotelockMessage -Server "my.domain.com" -Message "Hello World!" -SelfSigned $true
 
 
 #################################
 # Notelock - New Message
 #################################
-function Notelock-NewMessage {
+function New-NotelockMessage {
     param (
         [Parameter(Mandatory=$true)]
         [string]$Server, # the FQDN of the server to connect to (i.e. my.domain.com)
@@ -36,11 +36,11 @@ function Notelock-NewMessage {
 
     # Check if this is a loopback from inside PowerShell5
     if ($LegacySupport) {
-        Notelock-PowerShell5-EncryptMessage -Message $Message
+        Invoke-NotelockEncryptMessagePS5 -Message $Message
     } else {
         # Allow Self-Signed SSL certs, if we aren't executing directly from PowerShell7
         if (($PSVersionTable.PSVersion.Major -lt 7) -and $SelfSigned) {
-            Notelock-SSLHandler
+            New-NotelockSSLHandler
         }
 
         # Test connection to the Server
@@ -53,7 +53,7 @@ function Notelock-NewMessage {
         # Ensure message isn't blank
         if ($Message -ne '') {
             # Get the encrypted message
-            $encMsg = Notelock-EncryptMessage -Message $Message
+            $encMsg = Invoke-NotelockEncryptMessage -Message $Message
         } else {
             Write-Error -Message "Message is empty"
             return
@@ -102,7 +102,7 @@ function Notelock-NewMessage {
     }
 }
 
-function Notelock-AesGcmEncrypt {
+function Invoke-NotelockAesGcmEncrypt {
         param (
             [Parameter(Mandatory=$true)]
             [string]$Message # the PlainText message to encrypt
@@ -145,7 +145,7 @@ function Notelock-AesGcmEncrypt {
 # Notelock - Encrypt Message
 #################################
 
-function Notelock-EncryptMessage {
+function Invoke-NotelockEncryptMessage {
     param (
         [Parameter(Mandatory=$true)]
         [string]$Message # the PlainText message to encrypt
@@ -164,7 +164,7 @@ function Notelock-EncryptMessage {
         $escapedMsg = [Regex]::Escape($Message) # Escape the message content
         $escapedMsg = $escapedMsg.Replace("'","''") # Escape single quotes as well
         # Run the process in a new PS7 environment
-        Start-Process -FilePath "$Env:ProgramFiles\powershell\7\pwsh.exe" -ArgumentList "-Command `"Notelock-NewMessage -Server empty -LegacySupport `$true -Message `'$escapedMsg`'`"" -Wait -WindowStyle Hidden -RedirectStandardOutput $tempFile
+        Start-Process -FilePath "$Env:ProgramFiles\powershell\7\pwsh.exe" -ArgumentList "-Command `"New-NotelockMessage -Server empty -LegacySupport `$true -Message `'$escapedMsg`'`"" -Wait -WindowStyle Hidden -RedirectStandardOutput $tempFile
         $output = Get-Content -Path $tempFile
         # Return data
         return [PSCustomObject]@{
@@ -178,7 +178,7 @@ function Notelock-EncryptMessage {
         Remove-Item -Path $tempFile
     } else {
         # Encrypt and return
-        return Notelock-AesGcmEncrypt -Message $Message
+        return Invoke-NotelockAesGcmEncrypt -Message $Message
     }
 }
 
@@ -187,7 +187,7 @@ function Notelock-EncryptMessage {
 # Notelock - PowerShell5 Support
 #################################
 
-function Notelock-PowerShell5-EncryptMessage {
+function Invoke-NotelockEncryptMessagePS5 {
     param (
         [Parameter(Mandatory=$true)]
         [string]$Message # the PlainText message to encrypt
@@ -201,7 +201,7 @@ function Notelock-PowerShell5-EncryptMessage {
     $unescapedMsg = $unescapedMsg.Replace("''","'") # Unescape single quotes as well
 
     # Encrypt the message
-    $encData = Notelock-AesGcmEncrypt -Message $unescapedMsg
+    $encData = Invoke-NotelockAesGcmEncrypt -Message $unescapedMsg
 
     # Write to output file
     Write-Host $encData.InitVector
@@ -215,7 +215,7 @@ function Notelock-PowerShell5-EncryptMessage {
 # Notelock - SSL Handler
 #################################
 
-function Notelock-SSLHandler {
+function New-NotelockSSLHandler {
 
 # Create a C# class to handle the callback
 #############################################################################################################################
@@ -239,4 +239,4 @@ public class SSLHandler
 
 
 # Export
-Export-ModuleMember -Function Notelock-NewMessage
+Export-ModuleMember -Function New-NotelockMessage
