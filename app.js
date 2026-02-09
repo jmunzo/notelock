@@ -18,7 +18,7 @@ const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 const reqTimeWindow = 15; // Time window for max requests (in minutes)
 const reqMaxRequests = 100; // Max requests allowed from an IP within time window
 
-// Rate Limit - Encryption Only
+// Rate Limit - Encryption
 const encTimeWindow = 1; // Time window for max encryption requests (in minutes)
 const encMaxRequests = 5; // Max encryption requests allowed from an IP within time window
 
@@ -77,9 +77,9 @@ const encLimiter = rateLimit({
     windowMs: encTimeWindow * 60 * 1000, // Time (in minutes)
     max: encMaxRequests, // Amount of requests
     handler: (req, res, next, options) => {
-        res.json({ id: 'ERROR', time: `${encTimeWindow}` });
-      },
-      message: `Too many encryption requests! Please try again after ${encTimeWindow} minute(s).`
+        res.json({ id: 'ERROR', reason: 'encryption', time: `${encTimeWindow}` });
+    },
+    message: `Too many encryption requests! Please try again after ${encTimeWindow} minute(s).`
 });
 console.log("[CONFIG] IPs are allowed to encrypt", encMaxRequests, "messages every", encTimeWindow, "minute(s)");
 
@@ -89,8 +89,8 @@ const reqLimiter = rateLimit({
     max: reqMaxRequests, // Amount of requests
     handler: (req, res, next, options) => {
         res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly, message: `too many requests.  try again in ${reqTimeWindow} minute(s)` });
-      },
-      message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
+    },
+    message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
 });
 console.log("[CONFIG] IPs are allowed to make", reqMaxRequests, "requests every", reqTimeWindow, "minute(s)")
 
@@ -132,8 +132,6 @@ app.use(express.urlencoded({ extended: true })); // Needed to parse request body
 
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
-
-app.use(reqLimiter);
 
 //#endregion
 
@@ -276,7 +274,7 @@ app.post('/encrypt', encLimiter, async (req, res) => {
 });
 
 // Render the website
-app.get('/', async (req, res) => {
+app.get('/', reqLimiter, async (req, res) => {
     const note = req.query.n; // Check for a note to decrypt
     // If we have a note, attempt to decrypt it
     if (note) {
@@ -298,6 +296,7 @@ app.get('/', async (req, res) => {
         };
     } else {
         if (apiOnly) {
+            // If we're running API Only, show a featureless webpage
             res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly });
         } else {
             // If there's no note, just render the webpage
@@ -306,7 +305,7 @@ app.get('/', async (req, res) => {
     };
 });
 
-// Redirect everything to the main website
+// Redirect everything else to the main website
 app.all('/{*splat}', async function(req, res){
     res.redirect("/");
 });

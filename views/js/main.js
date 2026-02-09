@@ -237,7 +237,7 @@
       messageLink.addEventListener('animationend', () => {
       messageLink.classList.remove('fade-in');
       }, { once: true });
-      messageLink.value = `error: too many encryption requests.  please wait ${data.time} minutes.`
+      messageLink.value = `error: too many ${data.reason} requests.  please wait ${data.time} minute(s).`
       messageLink.style.backgroundColor = "#A44";
     } else {
       data = data.id;

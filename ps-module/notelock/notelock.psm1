@@ -93,12 +93,17 @@ function New-NotelockMessage {
             $response = Invoke-RestMethod -Uri "https://$server/encrypt" -Method "POST" -Headers $headers -Body $body
         }
 
-        # Convert our Secret Key to an URL-safe equivalent
-        $urlSafeB64Key = $($encMsg.Key).Replace('+', '-').Replace('/', '_').Replace('=', '')
+        if ($response.id -cnotmatch "ERROR") {
 
-        # Form our private URL and return
-        $privURL = $response.id + $urlSafeB64Key
-        return $privUrl
+            # Convert our Secret Key to an URL-safe equivalent
+            $urlSafeB64Key = $($encMsg.Key).Replace('+', '-').Replace('/', '_').Replace('=', '')
+
+            # Form our private URL and return
+            $privURL = $response.id + $urlSafeB64Key
+            return $privUrl
+        } else {
+            Write-Error "ERROR: Too many $($response.reason) requests.  Try again after $($response.time) minute(s)."
+        }
     }
 }
 
