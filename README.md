@@ -21,14 +21,17 @@
 * better-sqlite3
 * nanoid
 * express-sslify
+* express-rate-limit
 
 ## considerations
 * requires https for cryptographic functions
-* has a powershell 7 module for creating messages
+* no storage persistence between sessions
 
 ## other features
 * 'api only' mode - disables the webpage for generating encrypted messages
 * message expiration - set a custom time limit, or prevent automatic purging
+* global and encryption based rate limits - set custom thresholds
+* powershell 7 module for creating encrypted messages
 
 ## install
 requires node.js - https://nodejs.org/en/download
@@ -65,5 +68,5 @@ openssl req -newkey rsa:4096 -x509 -sha256 -days 365 -nodes -out certificate.cer
 ```
 
 ## final thoughts
-* requires rate-limiter and token auth to truly be 'production ready'
+* requires token auth to truly be 'production ready'
 * code could probably be way more efficient
