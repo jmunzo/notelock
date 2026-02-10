@@ -113,15 +113,6 @@
   /////////////////////////////////
 
   /*
-  Fetch the contents of an HTML element
-  */
-  function getMessage(element) {
-    let messageBox = document.querySelector(element);
-    let message = messageBox.value;
-    return message;
-  }
-
-  /*
   Fetch the contents of an HTML element and encode
   */
   function getMessageEncoding(element) {
@@ -277,12 +268,12 @@
       encodedCipher
     );
     // Output to HTML fields
-    let dec = new TextDecoder();
     const decryptedValue = document.querySelector(".aes-gcm #decrypted-value");
     decryptedValue.classList.add('fade-in');
     decryptedValue.addEventListener('animationend', () => {
       decryptedValue.classList.remove('fade-in');
     }, { once: true });
+    let dec = new TextDecoder();
     decryptedValue.textContent = dec.decode(decrypted);
   }
 
@@ -321,6 +312,7 @@
   /*
   Decrypt message page
   */
+  // If the response is valid...
   if (document.head.querySelector("[property~=status][content]").content != 'false') {
     // Decrypt the message
     decryptMessage();
@@ -330,7 +322,7 @@
       copyToClipboard(textArea);
     });
   } else {
-    // Update the HTML
+    // Update the HTML with error info
     const textArea = document.querySelector("#decrypted-value");
     textArea.value = "error: invalid request."
     textArea.style.backgroundColor = "#A44";

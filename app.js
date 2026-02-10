@@ -42,9 +42,9 @@ const prInterval = 0; // Set to 0 to never print rows
 
 const express = require('express');
 const enforce = require('express-sslify');
+const rateLimit = require('express-rate-limit');
 const { nanoid } = require('nanoid');
 const ejs = require('ejs');
-const rateLimit = require('express-rate-limit');
 const Database = require('better-sqlite3');
 
 // Get timestamp in ISO8601 format
@@ -69,7 +69,7 @@ if (apiOnly) {
 //-----------------------
 
 /////////////////////////////////
-//#region EXPRESS-RATE-LIMITER
+//#region EXPRESS-RATE-LIMIT
 /////////////////////////////////
 
 // Rate limit for encryption
@@ -77,6 +77,10 @@ const encLimiter = rateLimit({
     windowMs: encTimeWindow * 60 * 1000, // Time (in minutes)
     max: encMaxRequests, // Amount of requests
     handler: (req, res, next, options) => {
+        let client = req.ip.split(":").pop(); // Get the client IP
+        let timeStamp = getTimeStamp();
+        console.log("[NOTELOCK]", timeStamp, ":", "Blocking", client, "for too many encryption requests");
+        // Send block response
         res.json({ id: 'ERROR', reason: 'encryption', time: `${encTimeWindow}` });
     },
     message: `Too many encryption requests! Please try again after ${encTimeWindow} minute(s).`
@@ -88,7 +92,11 @@ const reqLimiter = rateLimit({
     windowMs: reqTimeWindow * 60 * 1000, // Time (in minutes)
     max: reqMaxRequests, // Amount of requests
     handler: (req, res, next, options) => {
-        res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly, message: `too many requests.  try again in ${reqTimeWindow} minute(s)` });
+        let client = req.ip.split(":").pop(); // Get the client IP
+        let timeStamp = getTimeStamp();
+        console.log("[NOTELOCK]", timeStamp, ":", "Blocking", client, "for too many page requests");
+        // Redirect to error page
+        res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly, message: `too many page requests.  try again in ${reqTimeWindow} minute(s)` });
     },
     message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
 });
@@ -176,16 +184,13 @@ function dbFindData(uuid) {
 // Print Table contents to log (OPTIONAL)
 function dbDumpTable() {
     // Prepare the SQL statement and execute
-    let dump = db.prepare('SELECT * FROM notelock');
+    let dump = db.prepare('SELECT uuid, created FROM notelock');
     let contents = dump.all();
     // Log to console
     let timeStamp = getTimeStamp();
     console.log("[SQLITE3]", timeStamp, ":", "Printing database contents...");
     if (contents.length > 0) {
-        console.log("[SQLITE3] UUID:-----------------CREATED:-----------------NOTE:-----------");
-        contents.forEach(row => {
-            console.log("[SQLITE3]", row.uuid, row.created, row.note);
-        });
+        console.table(contents);
     } else {
         console.log("[SQLITE3]", timeStamp, ":", "Database is currently empty");
     };
@@ -224,7 +229,7 @@ function dbExpireValue() {
     }
 }
 
-// Check for expired rows
+// Recurring Task - Check for expired rows
 const expireInterval = exInterval * 60 * 1000;
 if (expireInterval > 0) {
     console.log("[CONFIG] Notes are set to expire after", noteLife, "hours");
@@ -234,7 +239,7 @@ if (expireInterval > 0) {
     console.log("[CONFIG] Notes will never expire");
 };
 
-// Show database contents
+// Recurring Task - Print database contents
 const printInterval = prInterval * 60 * 1000;
 if (printInterval > 0) {
     console.log("[CONFIG] DB contents will print every", prInterval, "minute(s)");
@@ -332,14 +337,12 @@ async function startServers() {
 
 startServers().then(() => {
     let timeStamp = getTimeStamp();
-
     // Check if API Only
     if (apiOnly) {
         console.log("[NOTELOCK]", timeStamp, ":", "Notelock is running in API Only mode");
     } else {
         console.log("[NOTELOCK]", timeStamp, ":", "Notelock is running with webpage encryption available");
     }
-
     console.log("[NOTELOCK]", timeStamp, ":", "Notelock started successfully");
 });
 
