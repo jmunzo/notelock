@@ -203,7 +203,6 @@ function Invoke-NotelockEncryptMessagePS5 {
 
     # Unescape the message contents
     $unescapedMsg = [Regex]::Unescape($Message) # Escape the message content
-    $unescapedMsg = $unescapedMsg.Replace("''","'") # Unescape single quotes as well
 
     # Encrypt the message
     $encData = Invoke-NotelockAesGcmEncrypt -Message $unescapedMsg
