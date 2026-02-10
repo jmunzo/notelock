@@ -22,6 +22,7 @@
 * nanoid
 * express-sslify
 * express-rate-limit
+* express-slow-down
 
 ## considerations
 * requires https for cryptographic functions
