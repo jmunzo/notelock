@@ -174,6 +174,9 @@
   ENCRYPT THE MESSAGE
   */
   async function encryptMessage() {
+    // Show the loader
+    const loadAnim = document.querySelector(".loader");
+    loadAnim.style.visibility = "visible"
     // Fetch message
     let encoded = getMessageEncoding("#aes-gcm-message");
     // Generate an IV and convert to Base64
@@ -215,6 +218,8 @@
       },
       body: formBody
     });
+    // Hide the loader
+    loadAnim.style.visibility = "hidden"
     if (!noteUrl.ok) {
       throw new Error(`Response status: ${noteUrl.status}`);
     }

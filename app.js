@@ -14,13 +14,18 @@ const httpsPort = 443; // HTTPS port, default 443
 const exInterval = 5; // Interval to check for expired notes (in minutes), 0 will never expire
 const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 
-// Rate Limit - Global
-const reqTimeWindow = 15; // Time window for max requests (in minutes)
-const reqMaxRequests = 100; // Max requests allowed from an IP within time window
+// Global Speed Limit - Apply an exponential delay to server response after client exceeds threshold
+const spdTimeWindow = 1; // Time window to retain max request information (in minutes)
+const spdMaxRequests = 5; // Max requests allowed within time window before delay starts increasing
+const spdMaxDelayTime = 3; // Maximum amount of delay (in seconds)
 
-// Rate Limit - Encryption
+// Encryption Rate Limit - Block encryption requests from client after exceeding threshold
 const encTimeWindow = 1; // Time window for max encryption requests (in minutes)
-const encMaxRequests = 5; // Max encryption requests allowed from an IP within time window
+const encMaxRequests = 5; // Max encryption requests allowed within time window
+
+// Global Rate Limit - Block all requests from client after exceeding threshold
+const reqTimeWindow = 1; // Time window for max requests (in minutes)
+const reqMaxRequests = 30; // Max requests allowed within time window
 
 // API encryption only (disables encryption page)
 const apiOnly = false
@@ -43,6 +48,7 @@ const prInterval = 0; // Set to 0 to never print rows
 const express = require('express');
 const enforce = require('express-sslify');
 const rateLimit = require('express-rate-limit');
+const slowDown = require("express-slow-down");
 const { nanoid } = require('nanoid');
 const ejs = require('ejs');
 const Database = require('better-sqlite3');
@@ -69,6 +75,24 @@ if (apiOnly) {
 //-----------------------
 
 /////////////////////////////////
+//#region EXPRESS-SLOW-DOWN
+/////////////////////////////////
+
+// Speed limit for requests
+const speedLimiter = slowDown({
+    windowMs: spdTimeWindow * 60 * 1000, // Time (in minutes)
+    delayAfter: spdMaxRequests, // Amount of requests
+    delayMs: (hits) => (hits - spdMaxRequests) * 1000, // Delay time (in hundredths of a second)
+    maxDelayMs: spdMaxDelayTime * 1000 // Maximum delay
+});
+console.log("[CONFIG] Clients will experience an increasing delay after making", spdMaxRequests, "requests in", spdTimeWindow, "minute(s)");
+console.log("[CONFIG] This delay will not exceed a maximum of", spdMaxDelayTime, "second(s)");
+
+//#endregion
+
+//-----------------------
+
+/////////////////////////////////
 //#region EXPRESS-RATE-LIMIT
 /////////////////////////////////
 
@@ -85,7 +109,7 @@ const encLimiter = rateLimit({
     },
     message: `Too many encryption requests! Please try again after ${encTimeWindow} minute(s).`
 });
-console.log("[CONFIG] IPs are allowed to encrypt", encMaxRequests, "messages every", encTimeWindow, "minute(s)");
+console.log("[CONFIG] Clients are allowed to encrypt", encMaxRequests, "messages every", encTimeWindow, "minute(s)");
 
 // General rate limit
 const reqLimiter = rateLimit({
@@ -100,7 +124,7 @@ const reqLimiter = rateLimit({
     },
     message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
 });
-console.log("[CONFIG] IPs are allowed to make", reqMaxRequests, "requests every", reqTimeWindow, "minute(s)")
+console.log("[CONFIG] Clients are allowed to make", reqMaxRequests, "requests every", reqTimeWindow, "minute(s)")
 
 //#endregion
 
@@ -140,6 +164,9 @@ app.use(express.urlencoded({ extended: true })); // Needed to parse request body
 
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
+
+app.use(reqLimiter);
+app.use(speedLimiter);
 
 //#endregion
 
@@ -279,7 +306,7 @@ app.post('/encrypt', encLimiter, async (req, res) => {
 });
 
 // Render the website
-app.get('/', reqLimiter, async (req, res) => {
+app.get('/', async (req, res) => {
     const note = req.query.n; // Check for a note to decrypt
     // If we have a note, attempt to decrypt it
     if (note) {
