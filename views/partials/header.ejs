@@ -3,8 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <% if (status) { %>
-    <meta property="status" content="<%= status %>" />
+  <% if (typeof(cipher) !== 'undefined') { %>
     <meta property="cipher" content="<%= cipher %>" />
   <% } %>
   <title>notelock</title>

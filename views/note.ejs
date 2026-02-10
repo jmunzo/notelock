@@ -1,6 +1,6 @@
 <%- include('partials/header'); -%>
 
-<% if (cipher !== '' && status !== '') { %>
+<% if (typeof(cipher) !== 'undefined') { %>
 <h2 class="control-heading">read a message</h2>
 <div class="description">
   <p>this message will no longer be readable once you leave this page.</p>
@@ -14,10 +14,10 @@
 </section>
 <% } %>
 
-<% if (cipher === '' && status === '' && typeof(message) !== 'undefined') { %>
+<% if (typeof(error) !== 'undefined') { %>
 <h2 class="control-heading">error</h2>
 <div class="description">
-  <p><%= message %></p>
+  <p><%= error %></p>
 </div>
 <% } %>
 

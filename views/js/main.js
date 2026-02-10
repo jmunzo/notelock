@@ -318,7 +318,7 @@
   Decrypt message page
   */
   // If the response is valid...
-  if (document.head.querySelector("[property~=status][content]").content != 'false') {
+  if (document.head.querySelector("[property~=cipher][content]").content) {
     // Decrypt the message
     decryptMessage();
     // Copy to Clipboard

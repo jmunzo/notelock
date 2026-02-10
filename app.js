@@ -120,7 +120,7 @@ const reqLimiter = rateLimit({
         let timeStamp = getTimeStamp();
         console.log("[NOTELOCK]", timeStamp, ":", "Blocking", client, "for too many page requests");
         // Redirect to error page
-        res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly, message: `too many page requests.  try again in ${reqTimeWindow} minute(s)` });
+        res.render('note.ejs', { apionly: apiOnly, error: `too many page requests. try again in ${reqTimeWindow} minute(s)` });
     },
     message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
 });
@@ -319,20 +319,20 @@ app.get('/', async (req, res) => {
         let cipherText = await dbFindData(noteId);  
         if (cipherText) {
             // Respond with the decryption page
-            res.render('note.ejs', { cipher: cipherText, status: 'true', apionly: apiOnly });
+            res.render('note.ejs', { cipher: cipherText, apionly: apiOnly });
             dbDeleteValue(noteId); // Purge the note from the DB
         } else {
             // Respond with error
             console.log("[NOTELOCK]", timeStamp, ":", "Note was not found");
-            res.render('note.ejs', { cipher: 'false', status: 'false', apionly: apiOnly });
+            res.render('note.ejs', { cipher: '', apionly: apiOnly });
         };
     } else {
         if (apiOnly) {
             // If we're running API Only, show a featureless webpage
-            res.render('note.ejs', { cipher: '', status: '', apionly: apiOnly });
+            res.render('note.ejs', { apionly: apiOnly });
         } else {
             // If there's no note, just render the webpage
-            res.render('index.ejs', { cipher: 'false', status: 'false', apionly: apiOnly });
+            res.render('index.ejs', { apionly: apiOnly });
         }
     };
 });
