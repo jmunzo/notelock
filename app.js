@@ -15,20 +15,23 @@ const exInterval = 5; // Interval to check for expired notes (in minutes), 0 wil
 const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 
 // Global Speed Limit - Apply an exponential delay to server response after client exceeds threshold
-const spdTimeWindow = 1; // Time window to retain max request information (in minutes)
-const spdMaxRequests = 5; // Max requests allowed within time window before delay starts increasing
-const spdMaxDelayTime = 3; // Maximum amount of delay (in seconds)
+const spdTimeWindow = 15; // Time window to retain max request information (in minutes)
+const spdMaxRequests = 1; // Max requests allowed within time window before delay starts increasing
+const spdMaxDelayTime = 10; // Maximum amount of delay (in seconds)
 
 // Encryption Rate Limit - Block encryption requests from client after exceeding threshold
-const encTimeWindow = 1; // Time window for max encryption requests (in minutes)
-const encMaxRequests = 5; // Max encryption requests allowed within time window
+const encTimeWindow = 30; // Time window for max encryption requests (in minutes)
+const encMaxRequests = 10; // Max encryption requests allowed within time window
 
 // Global Rate Limit - Block all requests from client after exceeding threshold
-const reqTimeWindow = 1; // Time window for max requests (in minutes)
-const reqMaxRequests = 30; // Max requests allowed within time window
+const reqTimeWindow = 15; // Time window for max requests (in minutes)
+const reqMaxRequests = 100; // Max requests allowed within time window
 
 // API encryption only (disables encryption page)
-const apiOnly = false
+const apiOnly = false;
+
+// Custom branding - 
+const customBranding = ""; // Provide path to CSS file to enable (i.e. "./branding/style.css")
 
 /////////////////////////////////
 //#region DEBUG OPTIONS
@@ -70,6 +73,10 @@ if (apiOnly) {
     console.log("[NOTELOCK]", timeStamp, ":", "Notelock is starting...");
 }
 
+if (customBranding != ""){
+    console.log("[NOTELOCK]", timeStamp, ":", "Notelock has custom branding enabled");
+}
+
 //#endregion
 
 //-----------------------
@@ -82,7 +89,7 @@ if (apiOnly) {
 const speedLimiter = slowDown({
     windowMs: spdTimeWindow * 60 * 1000, // Time (in minutes)
     delayAfter: spdMaxRequests, // Amount of requests
-    delayMs: (hits) => (hits - spdMaxRequests) * 1000, // Delay time (in hundredths of a second)
+    delayMs: (hits) => (hits - spdMaxRequests) * 100, // Delay time (in hundredths of a second)
     maxDelayMs: spdMaxDelayTime * 1000 // Maximum delay
 });
 console.log("[CONFIG] Clients will experience an increasing delay after making", spdMaxRequests, "requests in", spdTimeWindow, "minute(s)");
@@ -120,7 +127,7 @@ const reqLimiter = rateLimit({
         let timeStamp = getTimeStamp();
         console.log("[NOTELOCK]", timeStamp, ":", "Blocking", client, "for too many page requests");
         // Redirect to error page
-        res.render('note.ejs', { apionly: apiOnly, error: `too many page requests. try again in ${reqTimeWindow} minute(s)` });
+        res.render('note.ejs', { apionly: apiOnly, branding: customBranding, error: `too many page requests. try again in ${reqTimeWindow} minute(s)` });
     },
     message: `Too many page requests! Please try again after ${reqTimeWindow} minute(s).`
 });
@@ -319,20 +326,20 @@ app.get('/', async (req, res) => {
         let cipherText = await dbFindData(noteId);  
         if (cipherText) {
             // Respond with the decryption page
-            res.render('note.ejs', { cipher: cipherText, apionly: apiOnly });
+            res.render('note.ejs', { cipher: cipherText, apionly: apiOnly, branding: customBranding });
             dbDeleteValue(noteId); // Purge the note from the DB
         } else {
             // Respond with error
             console.log("[NOTELOCK]", timeStamp, ":", "Note was not found");
-            res.render('note.ejs', { cipher: '', apionly: apiOnly });
+            res.render('note.ejs', { cipher: '', apionly: apiOnly, branding: customBranding });
         };
     } else {
         if (apiOnly) {
             // If we're running API Only, show a featureless webpage
-            res.render('note.ejs', { apionly: apiOnly });
+            res.render('note.ejs', { apionly: apiOnly, branding: customBranding });
         } else {
             // If there's no note, just render the webpage
-            res.render('index.ejs', { apionly: apiOnly });
+            res.render('index.ejs', { apionly: apiOnly, branding: customBranding });
         }
     };
 });

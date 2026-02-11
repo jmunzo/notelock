@@ -1,0 +1,40 @@
+/*
+CUSTOM BRANDING
+*/
+  
+html,
+body {
+  background-color: #1D4F91; /* background color */
+  color: #fff; /* font color */
+}
+
+.branding {
+    height: 80px; /* size of the branding image */
+}
+
+.branding-image {
+    background-image: url("./logo.svg"); /* path to branding image */
+    border-bottom-color: #fff; /* separator line color */
+    filter: saturate(0%) brightness(2000%) contrast(200%); /* apply color filters to the image */
+}
+
+a {
+  color: #fff; /* link color */
+}
+
+a:hover {
+  color: #999; /* link hover color */
+}
+  
+h1 {
+  color: #fff; /* header color */
+  display: none; /* hide header */
+}
+
+h1 a:hover {
+  color: #fff; /* header hover color */
+}
+
+.control {
+  background-color: #53565A; /* form background color */
+}

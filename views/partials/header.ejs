@@ -8,13 +8,23 @@
   <% } %>
   <title>notelock</title>
   <link rel="stylesheet" type="text/css" href="/styles/style.css" />
+  <% if (branding !== '') { %>
+    <link rel="stylesheet" type="text/css" href="<%= branding %>" />
+  <% } %>
 </head>
 
 <body>
+  <% if (branding !== '') { %>
+    <div class="branding">
+      <a href="../"><div class="branding-image"></div></a>
+    </div>
+  <% } %>
   <h1><a href="../">notelock</a></h1>
   <div class="description">
+    <% if (branding === '') { %>
     <p>a minimalist zero-knowledge plaintext encryption platform</p>
-    <p>by <a href="http://github.com/jmunzo">github.com/jmunzo</a></p>
+    <p>by <a href="http://github.com/jmunzo" target="_blank">github.com/jmunzo</a></p>
+    <% } %>
   </div>
   <main>
     <section class="control-body">
