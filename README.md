@@ -32,6 +32,7 @@
 * 'api only' mode - disables the webpage for generating encrypted messages
 * message expiration - set a custom time limit, or prevent automatic purging
 * global and encryption based rate limits - set custom thresholds
+* branding support - quickly customize the interface with colors and a logo
 * powershell 7 module for creating encrypted messages
 
 ## install
