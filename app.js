@@ -15,17 +15,21 @@ const exInterval = 5; // Interval to check for expired notes (in minutes), 0 wil
 const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 
 // Global Speed Limit - Apply an exponential delay to server response after client exceeds threshold
-const spdTimeWindow = 15; // Time window to retain max request information (in minutes)
+const spdTimeWindow = 30; // Time window to retain max request information (in minutes)
 const spdMaxRequests = 1; // Max requests allowed within time window before delay starts increasing
-const spdMaxDelayTime = 10; // Maximum amount of delay (in seconds)
+const spdDelayTime = 0.25; // The amount of delay to add to the response (in seconds)
+const spdMaxDelayTime = 5; // Maximum amount of delay (in seconds)
 
 // Encryption Rate Limit - Block encryption requests from client after exceeding threshold
 const encTimeWindow = 30; // Time window for max encryption requests (in minutes)
 const encMaxRequests = 10; // Max encryption requests allowed within time window
 
 // Global Rate Limit - Block all requests from client after exceeding threshold
-const reqTimeWindow = 15; // Time window for max requests (in minutes)
-const reqMaxRequests = 100; // Max requests allowed within time window
+const reqTimeWindow = 5; // Time window for max requests (in minutes)
+const reqMaxRequests = 30; // Max requests allowed within time window
+
+// Subnet Mask for Rate / Speed Limit
+const subMask = 56; // Subnet mask to apply to IPv6 addresses. Valid range is 1-120, recommend range is 48-64.
 
 // API encryption only (disables encryption page)
 const apiOnly = false;
@@ -50,7 +54,7 @@ const prInterval = 0; // Set to 0 to never print rows
 
 const express = require('express');
 const enforce = require('express-sslify');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const slowDown = require("express-slow-down");
 const { nanoid } = require('nanoid');
 const ejs = require('ejs');
@@ -87,12 +91,13 @@ if (customBranding != ""){
 
 // Speed limit for requests
 const speedLimiter = slowDown({
+    keyGenerator: (req, res) => { return ipKeyGenerator(req.ip, subMask) },
     windowMs: spdTimeWindow * 60 * 1000, // Time (in minutes)
     delayAfter: spdMaxRequests, // Amount of requests
-    delayMs: (hits) => (hits - spdMaxRequests) * 100, // Delay time (in hundredths of a second)
+    delayMs: (hits) => (hits - spdMaxRequests) * (spdDelayTime * 1000), // Delay time (in seconds)
     maxDelayMs: spdMaxDelayTime * 1000 // Maximum delay
 });
-console.log("[CONFIG] Clients will experience an increasing delay after making", spdMaxRequests, "requests in", spdTimeWindow, "minute(s)");
+console.log("[CONFIG] Clients will experience an increasing", spdDelayTime, "second delay after making", spdMaxRequests, "requests in", spdTimeWindow, "minute(s)");
 console.log("[CONFIG] This delay will not exceed a maximum of", spdMaxDelayTime, "second(s)");
 
 //#endregion
@@ -107,6 +112,7 @@ console.log("[CONFIG] This delay will not exceed a maximum of", spdMaxDelayTime,
 const encLimiter = rateLimit({
     windowMs: encTimeWindow * 60 * 1000, // Time (in minutes)
     max: encMaxRequests, // Amount of requests
+    keyGenerator: (req, res) => { return ipKeyGenerator(req.ip, subMask) },
     handler: (req, res, next, options) => {
         let client = req.ip.split(":").pop(); // Get the client IP
         let timeStamp = getTimeStamp();
@@ -122,6 +128,7 @@ console.log("[CONFIG] Clients are allowed to encrypt", encMaxRequests, "messages
 const reqLimiter = rateLimit({
     windowMs: reqTimeWindow * 60 * 1000, // Time (in minutes)
     max: reqMaxRequests, // Amount of requests
+    keyGenerator: (req, res) => { return ipKeyGenerator(req.ip, subMask) },
     handler: (req, res, next, options) => {
         let client = req.ip.split(":").pop(); // Get the client IP
         let timeStamp = getTimeStamp();
