@@ -6,13 +6,18 @@ GENERAL SETUP
     box-sizing: border-box;
     vertical-align: top;
 }
+
+html {
+  margin: 0;
+  height: 100%;
+  background-color: #333;
+  color: #fff;
+}
   
 html,
 body {
   font-family: sans-serif;
   line-height: 1.2rem;
-  background-color: #333;
-  color: #fff;
 }
 
 label {

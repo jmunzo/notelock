@@ -17,7 +17,7 @@ const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 // Global Speed Limit - Apply an exponential delay to server response after client exceeds threshold
 const spdTimeWindow = 30; // Time window to retain max request information (in minutes)
 const spdMaxRequests = 1; // Max requests allowed within time window before delay starts increasing
-const spdDelayTime = 0.25; // The amount of delay to add to the response (in seconds)
+const spdDelayTime = 0.1; // The amount of delay to add to the response (in seconds)
 const spdMaxDelayTime = 5; // Maximum amount of delay (in seconds)
 
 // Encryption Rate Limit - Block encryption requests from client after exceeding threshold
@@ -26,7 +26,7 @@ const encMaxRequests = 10; // Max encryption requests allowed within time window
 
 // Global Rate Limit - Block all requests from client after exceeding threshold
 const reqTimeWindow = 5; // Time window for max requests (in minutes)
-const reqMaxRequests = 30; // Max requests allowed within time window
+const reqMaxRequests = 40; // Max requests allowed within time window
 
 // Subnet Mask for Rate / Speed Limit
 const subMask = 56; // Subnet mask to apply to IPv6 addresses. Valid range is 1-120, recommend range is 48-64.
