@@ -59,6 +59,12 @@ function New-NotelockMessage {
             return
         }
 
+        # Check the message integrity
+        if ($($encMsg.Key).Contains(';')) {
+            Write-Error -Message "Message encoding failed"
+            return
+        }
+
         # Join the IV and CipherText and escape
         $joinedMsg = $encMsg.InitVector + $encMsg.CipherTag
         $joinedMsg = $joinedMsg.Replace("+", "%2B") # Escape characters because PowerShell is terrible
@@ -171,7 +177,7 @@ function Invoke-NotelockEncryptMessage {
         # Run the process in a new PS7 environment
         Start-Process -FilePath "$Env:ProgramFiles\powershell\7\pwsh.exe" -ArgumentList "-Command `"New-NotelockMessage -Server empty -LegacySupport `$true -Message `'$escapedMsg`'`"" -Wait -WindowStyle Hidden -RedirectStandardOutput $tempFile
         $output = Get-Content -Path $tempFile
-        # Return data
+        # Get data
         return [PSCustomObject]@{
             InitVector = $output[0]
             Key = $output[1]
