@@ -18,7 +18,7 @@ const noteLife = 24; // Lifetime of notes (in hours), can not be less than 1
 const spdTimeWindow = 30; // Time window to retain max request information (in minutes)
 const spdMaxRequests = 1; // Max requests allowed within time window before delay starts increasing
 const spdDelayTime = 0.1; // The amount of delay to add to the response (in seconds)
-const spdMaxDelayTime = 5; // Maximum amount of delay (in seconds)
+const spdMaxDelayTime = 2; // Maximum amount of delay (in seconds)
 
 // Encryption Rate Limit - Block encryption requests from client after exceeding threshold
 const encTimeWindow = 30; // Time window for max encryption requests (in minutes)
@@ -26,10 +26,11 @@ const encMaxRequests = 10; // Max encryption requests allowed within time window
 
 // Global Rate Limit - Block all requests from client after exceeding threshold
 const reqTimeWindow = 5; // Time window for max requests (in minutes)
-const reqMaxRequests = 40; // Max requests allowed within time window
+const reqMaxRequests = 100; // Max requests allowed within time window
 
-// Subnet Mask for Rate / Speed Limit
+// Subnet Mask and Proxy Count for Rate / Speed Limit
 const subMask = 56; // Subnet mask to apply to IPv6 addresses. Valid range is 1-120, recommend range is 48-64.
+const proxyCount = 1; // Number of proxies between client and server
 
 // API encryption only (disables encryption page)
 const apiOnly = false;
@@ -179,6 +180,8 @@ app.use(express.urlencoded({ extended: true })); // Needed to parse request body
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
+app.set('trust proxy', proxyCount);
+
 app.use(reqLimiter);
 app.use(speedLimiter);
 
@@ -255,18 +258,13 @@ function dbDeleteValue(uuid) {
 
 // Delete Table data by Timestamp if older than 24 hours
 function dbExpireValue() {
-    // Log to console
-    let timeStamp = getTimeStamp();
-    console.log("[SQLITE3]", timeStamp, ":", "Checking for rows older than 24 hours...");
     // Prepare the SQL statement and execute
     let deleteOldData = db.prepare(`DELETE FROM notelock WHERE created < datetime('now', '-${noteLife} hours')`);
     let delValue = deleteOldData.run();
     // Log to console
-    timeStamp = getTimeStamp();
     if (delValue.changes > 0) {
+        let timeStamp = getTimeStamp();
         console.log("[SQLITE3]", timeStamp, ":", "Purged", delValue.changes, "rows older than 24 hours.");
-    } else {
-        console.log("[SQLITE3]", timeStamp, ":", "No rows found");
     }
 }
 
