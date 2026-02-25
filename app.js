@@ -30,7 +30,7 @@ const reqMaxRequests = 100; // Max requests allowed within time window
 
 // Subnet Mask and Proxy Count for Rate / Speed Limit
 const subMask = 56; // Subnet mask to apply to IPv6 addresses. Valid range is 1-120, recommend range is 48-64.
-const proxyCount = 1; // Number of proxies between client and server
+const proxyCount = 0; // Number of proxies between client and server
 
 // API encryption only (disables encryption page)
 const apiOnly = false;
@@ -180,7 +180,9 @@ app.use(express.urlencoded({ extended: true })); // Needed to parse request body
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
-app.set('trust proxy', proxyCount);
+if (proxyCount > 0) {
+    app.set('trust proxy', proxyCount);
+};
 
 app.use(reqLimiter);
 app.use(speedLimiter);
