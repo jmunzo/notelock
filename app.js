@@ -201,16 +201,15 @@ timeStamp = getTimeStamp();
 console.log("[SQLITE3]", timeStamp, ":", "Database connected");
 
 // Create a Table at first run
-db.exec('CREATE TABLE notelock (uuid TEXT PRIMARY_KEY, note TEXT, created TEXT)');
+db.exec('CREATE TABLE notelock (uuid TEXT PRIMARY_KEY, note TEXT, created TEXT DEFAULT CURRENT_TIMESTAMP)');
 timeStamp = getTimeStamp();
 console.log("[SQLITE3]", timeStamp, ":", "Table created");
 
 // Add data to the Table
 function dbAddData(newID, cipherText) {
     // Prepare the SQL statement and execute
-    let insert = db.prepare('INSERT INTO notelock (uuid, note, created) VALUES (?, ?, ?)');
-    let timeStamp = getTimeStamp(); // Mark with timestamp for expiration
-    insert.run(newID, cipherText, timeStamp);
+    let insert = db.prepare('INSERT INTO notelock (uuid, note) VALUES (?, ?)');
+    insert.run(newID, cipherText);
 };
 
 // Find data in the Table by Primary_Key value
